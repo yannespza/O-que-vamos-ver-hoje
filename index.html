@@ -26,10 +26,10 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 /* topo */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:linear-gradient(var(--bg) 78%,rgba(12,11,16,0));padding:12px 0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:baseline;gap:10px;min-width:0;border:0;background:none;padding:0;text-align:left}
-.brand b{font:400 27px/1 var(--display);letter-spacing:.02em;white-space:nowrap}
+.brand b{font:400 clamp(17px,5.9vw,27px)/1 var(--display);letter-spacing:.02em;white-space:nowrap}.top-btns .icon-btn{width:38px;height:38px}
 .brand b i{font-style:normal;color:var(--accent)}
 .brand small{font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.top-btns{display:flex;gap:8px;flex:none}.icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
 .icon-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
@@ -200,7 +200,8 @@ main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 </head><body><div class="wrap">
   <header class="top">
     <button class="brand" data-go="inicio" aria-label="Ir para o início"><b>O que vamos ver <i>hoje?</i></b><small id="sub"></small></button>
-    <button class="icon-btn" data-go="buscar" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    <div class="top-btns"><button class="icon-btn" data-act="compartilharapp" aria-label="Compartilhar o app" title="Compartilhar o app"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 11v9h14v-9"/></svg></button>
+    <button class="icon-btn" data-go="buscar" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button></div>
   </header>
   <main id="main"></main>
 </div>
@@ -1060,6 +1061,14 @@ function copiar(txt){
   function velho(){var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}ta.remove();return ok;}
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){toast("Lista copiada. É só colar na conversa.");},function(){toast(velho()?"Lista copiada. É só colar na conversa.":"Não consegui copiar a lista.");});
   else toast(velho()?"Lista copiada. É só colar na conversa.":"Não consegui copiar a lista.");}
+function compartilharApp(){
+  var url=location.origin+location.pathname,txt="Olha que legal esse app pra escolher o que assistir: O que vamos ver hoje? 🎬 Tem catálogo de filmes e séries, sorteio e lista. Dá pra instalar no celular:";
+  function cop(){var t=txt+" "+url;
+    function velho(){var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}ta.remove();return ok;}
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast("Link do app copiado. É só colar na conversa.");},function(){toast(velho()?"Link do app copiado.":"Não consegui copiar o link.");});
+    else toast(velho()?"Link do app copiado.":"Não consegui copiar o link.");}
+  if(navigator.share){navigator.share({title:"O que vamos ver hoje?",text:txt,url:url}).catch(function(e){if(!e||e.name!=="AbortError")cop();});}
+  else cop();}
 function compartilharLista(){
   var txt=textoLista();
   if(navigator.share){navigator.share({title:"Nossa lista",text:txt}).catch(function(e){if(!e||e.name!=="AbortError")copiar(txt);});}
@@ -1241,6 +1250,7 @@ document.addEventListener("click",function(e){
   switch(d.act){
     case "quero":var id=d.id,s0=st(id);setMark(id,{s:s0==="quero"?"":"quero"});toast(s0==="quero"?"Tirado da lista":"Na nossa lista");break;
     case "compartilhar":compartilharLista();break;
+    case "compartilharapp":compartilharApp();break;
     case "outra":state.sug++;render();break;
     case "sortear":sortear();break;
     case "mais":b.lim+=60;drawBres();break;

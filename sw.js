@@ -1,5 +1,5 @@
 // Guarda o app no celular para abrir rápido e funcionar sem internet.
-const CACHE = "o-que-vamos-ver-v4";
+const CACHE = "o-que-vamos-ver-v5";
 const ARQUIVOS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
