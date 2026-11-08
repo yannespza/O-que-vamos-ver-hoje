@@ -137,6 +137,7 @@ main{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 .lrow .side{display:flex;align-items:center;gap:8px}
 .mini{min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);font-weight:700;font-size:13px;white-space:nowrap}
 .mini.acc{background:var(--accent);color:#fff;border-color:transparent}
+.sharebtn{width:100%}
 .nota{font:400 22px/1 var(--display);color:var(--imdb);white-space:nowrap}
 .nota small{font:600 11px var(--sans);color:var(--ink-3)}
 
@@ -1033,6 +1034,7 @@ function vLista(){
   if(!arr.length){
     var msg={quero:["A fila está vazia","Toque num título e escolha Quero ver."],assistindo:["Nenhuma série em andamento","Abra uma série e marque Assistindo para guardar o episódio."],visto:["Nada marcado ainda","Quando terminarem um filme, marquem Já vimos e deem uma nota."],nao:["Nenhum descartado","O que vocês marcarem como Não curti some das sugestões."]}[state.lista];
     return h+'<div class="empty"><b>'+msg[0]+'</b>'+msg[1]+'</div>';}
+  h+='<button class="btn sharebtn" data-act="compartilhar"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartilhar esta lista</button>';
   h+='<div class="list">'+arr.map(function(t){
     var m=mark(t.id),side='';
     if(state.lista==="assistindo")side='<span class="nota" style="color:var(--ink)">T'+(m.temp||1)+'<small> · </small>E'+(m.ep||1)+'</span><button class="mini acc" data-ep1="'+t.id+'" aria-label="Mais um episódio de '+esc(t.pt)+'">+1 ep</button>';
@@ -1041,6 +1043,27 @@ function vLista(){
     return '<div class="lrow" role="button" tabindex="0" data-open="'+t.id+'" style="--g:'+gColor(t)+'"><span class="stripe"></span><span class="main"><b>'+esc(t.pt)+'</b><small>'+(t.difOr?esc(t.or)+' · ':'')+esc(gNames(t)[0]||"")+' · '+t.ano+(t.tipo==="s"?' · série':'')+(m.onde?' · '+esc(m.onde):'')+'</small></span><span class="side">'+side+'</span></div>';
   }).join("")+'</div>';
   return h;}
+
+function textoLista(){
+  var nome={quero:"Quero ver",assistindo:"Assistindo",visto:"Já vimos",nao:"Descartados"}[state.lista];
+  var arr=Object.keys(state.marks).map(function(id){return BYID[id];}).filter(function(t){return t&&mark(t.id).s===state.lista;})
+    .sort(function(a,b){return (mark(b.id).at||"")<(mark(a.id).at||"")?-1:1;});
+  var linhas=arr.map(function(t){var m=mark(t.id),x='• '+t.pt+' ('+t.ano+(t.tipo==="s"?', série':'')+')';
+    if(state.lista==="assistindo")x+=' — T'+(m.temp||1)+' E'+(m.ep||1);
+    else if(state.lista==="visto"&&m.nota)x+=' — nossa nota '+m.nota;
+    else if(t.imdb)x+=' — IMDb '+imdbTxt(t);
+    return x;});
+  var txt='🎬 Nossa lista · '+nome+' ('+arr.length+')\n\n'+linhas.join('\n');
+  if(/^https?:/.test(location.href)&&!/claude\.ai|claudeusercontent/.test(location.hostname))txt+='\n\nO que vamos ver hoje? '+location.origin;
+  return txt;}
+function copiar(txt){
+  function velho(){var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy");}catch(e){}ta.remove();return ok;}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){toast("Lista copiada. É só colar na conversa.");},function(){toast(velho()?"Lista copiada. É só colar na conversa.":"Não consegui copiar a lista.");});
+  else toast(velho()?"Lista copiada. É só colar na conversa.":"Não consegui copiar a lista.");}
+function compartilharLista(){
+  var txt=textoLista();
+  if(navigator.share){navigator.share({title:"Nossa lista",text:txt}).catch(function(e){if(!e||e.name!=="AbortError")copiar(txt);});}
+  else copiar(txt);}
 
 /* ---------- ficha ---------- */
 function sheetHTML(t){
@@ -1217,6 +1240,7 @@ document.addEventListener("click",function(e){
   if(d.epd&&state.sheet){var m3=mark(state.sheet);setMark(state.sheet,{ep:Math.max(1,(m3.ep||1)+Number(d.epd)),temp:m3.temp||1});return;}
   switch(d.act){
     case "quero":var id=d.id,s0=st(id);setMark(id,{s:s0==="quero"?"":"quero"});toast(s0==="quero"?"Tirado da lista":"Na nossa lista");break;
+    case "compartilhar":compartilharLista();break;
     case "outra":state.sug++;render();break;
     case "sortear":sortear();break;
     case "mais":b.lim+=60;drawBres();break;
