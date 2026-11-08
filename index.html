@@ -965,7 +965,7 @@ function filtrar(b){
   var q=norm(b.q),words=q?q.split(/\s+/):[];
   var r=ALL.filter(function(t){
     if(b.tipo&&t.tipo!==b.tipo)return false;
-    for(var i=0;i<b.gen.length;i++)if(t.g.indexOf(b.gen[i])<0)return false;
+    if(b.gen.length){var ok=false;for(var i=0;i<b.gen.length;i++)if(t.g.indexOf(b.gen[i])>=0)ok=true;if(!ok)return false;}
     if(b.esconder){var s=st(t.id);if(s==="visto"||s==="nao")return false;}
     for(var j=0;j<words.length;j++)if(t.k.indexOf(words[j])<0)return false;
     return true;});
